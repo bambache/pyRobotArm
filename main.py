@@ -1,5 +1,7 @@
 from tkinter import *
 
+NMB_OF_SLIDERS = 6
+
 class App(Frame):
   def __init__(self, master=None):
     Frame.__init__(self,master)
@@ -7,54 +9,37 @@ class App(Frame):
     self.createWidgets()
 
   def sendValues(self,event):
-    val_a = self.a.get()
-    val_b = self.b.get()
-    val_c = self.c.get()
-    val_d = self.d.get()
-    val_e = self.e.get()
-    val_f = self.f.get()
     status = "Sending ( " 
-    status += str (val_a) + ", " + str (val_b) + ", "
-    status += str (val_c) + ", " + str (val_d) + ", "
-    status += str (val_e) + ", " + str (val_f)
+    for i in range(NMB_OF_SLIDERS):
+      val = self.sliders[i].get()
+      status += str (val)
+      if (i != NMB_OF_SLIDERS - 1):
+        status += ", "
     status += " )"
     self.STATUS.config(text=status)
 
+  def addSlider(self):
+    slider = Scale(from_=0, to=100, resolution=1)
+    slider.pack(side = "left", expand=1, fill="both")
+    slider.bind("<ButtonRelease-1>", self.sendValues)
+    self.sliders.append(slider)
+
   def createWidgets(self):
-    self.a = Scale(from_=0, to=100, resolution=1)
-    self.a.pack(side = "left", expand=1, fill="both")
-    self.a.bind("<ButtonRelease-1>", self.sendValues)
-
-    self.b = Scale(from_=0, to=100, resolution=1)
-    self.b.pack(side = "left", expand=1, fill="both")
-    self.b.bind("<ButtonRelease-1>", self.sendValues)
-
-    self.c = Scale(from_=0, to=100, resolution=1)
-    self.c.pack(side = "left", expand=1, fill="both")
-    self.c.bind("<ButtonRelease-1>", self.sendValues)
-
-    self.d = Scale(from_=0, to=100, resolution=1)
-    self.d.pack(side = "left", expand=1, fill="both")
-    self.d.bind("<ButtonRelease-1>", self.sendValues)
-
-    self.e = Scale(from_=0, to=100, resolution=1)
-    self.e.pack(side = "left", expand=1, fill="both")
-    self.e.bind("<ButtonRelease-1>", self.sendValues)
-
-    self.f = Scale(from_=0, to=100, resolution=1)
-    self.f.pack(side = "left", expand=1, fill="both")
-    self.f.bind("<ButtonRelease-1>", self.sendValues)
-
     self.STATUS = Label()
     self.STATUS["text"] = "Status"
-    self.STATUS.pack(side="bottom",fill="x", anchor="s")
+    self.STATUS.pack(side="bottom",fill="x", anchor="w")
+
+    self.sliders = []
+    for i in range(NMB_OF_SLIDERS):
+      self.addSlider()
 
     self.QUIT = Button()
     self.QUIT["text"] = "Quit"
     self.QUIT["command"] = self.quit
-    self.QUIT.pack(side = "left", fill="y", anchor="e")
+    self.QUIT.pack(side = "right", fill="y", anchor="e")
 
 root = Tk()
+root.geometry("480x320")
 app = App(master=root)
 app.master.title("pyRobotArm")
 app.mainloop()
