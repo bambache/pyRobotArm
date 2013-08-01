@@ -21,7 +21,7 @@ class App(Frame):
     master.protocol("WM_DELETE_WINDOW", self.stop)
     self.pack()
     self.createWidgets()
-    self.serial = serial.serial_for_url(PORT, timeout=1)
+    self.serial = serial.serial_for_url(PORT, timeout=0.1)
     self.alive = True
     self.thread_read = threading.Thread(target=self.reader)
     self.thread_read.setDaemon(True)
@@ -37,25 +37,25 @@ class App(Frame):
         if n:
           data = data + self.serial.read(n)   # and get as much as possible
         if data:
-          print ("received: " + str(data))
-	  #here some parsing needs to be done, to get the real positions for the sliders, as feedback from arduino
-      except msg:
-        sys.stderr.write('ERROR: %s\n' % msg)
-        break
+	  #here some parsing is to be done, to get the real positions for the sliders, as feedback from arduino
+          values = data.decode().split(',')
+          assert (len(values) == NMB_OF_SLIDERS)
+          for i in range(NMB_OF_SLIDERS):
+            self.sliders[i].set(int(values[i]))
+      except:
+        sys.stderr.write('ERROR: %s\n' % sys.exc_info()[0] )
+        raise
     self.alive = False
 
   def sendValues(self,event):
-    status = "( " 
+    status = ""
     for i in range(NMB_OF_SLIDERS):
       val = self.sliders[i].get()
       status += str (val)
       if (i != NMB_OF_SLIDERS - 1):
         status += ", "
-    status += " )"
     self.serial.write(data(status))
-    self.STATUS.config(text="Sent: " + status)
-    time.sleep(0.1)
-    print ("received:" + str(self.serial.read(50)))
+    self.STATUS.config(text="Sent: <" + status + ">")
 
   def addSlider(self):
     slider = Scale(from_=0, to=100, resolution=1)
@@ -67,7 +67,6 @@ class App(Frame):
     if self.alive:
       self.alive = False
       self.thread_read.join()
-      print ("thread ended")
       self.quit();
 
   def createWidgets(self):
