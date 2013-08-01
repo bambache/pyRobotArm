@@ -1,28 +1,74 @@
-from tkinter import *
+import serial
+import time
+import threading
+import sys
 
 NMB_OF_SLIDERS = 6
+PORT = "loop://logging=debug"
+
+if sys.version_info >= (3, 0):
+    from tkinter import *
+    def data(string):
+        return bytes(string, 'latin1')
+else:
+    from Tkinter import *
+    def data(string): return string
+
 
 class App(Frame):
   def __init__(self, master=None):
     Frame.__init__(self,master)
+    master.protocol("WM_DELETE_WINDOW", self.stop)
     self.pack()
     self.createWidgets()
+    self.serial = serial.serial_for_url(PORT, timeout=1)
+    self.alive = True
+    self.thread_read = threading.Thread(target=self.reader)
+    self.thread_read.setDaemon(True)
+    self.thread_read.setName('read serial')
+    self.thread_read.start()
+
+  def reader(self):
+    """loop forever """
+    while self.alive:
+      try:
+        data = self.serial.read(1)              # read one, blocking
+        n = self.serial.inWaiting()             # look if there is more
+        if n:
+          data = data + self.serial.read(n)   # and get as much as possible
+        if data:
+          print ("received: " + str(data))
+	  #here some parsing needs to be done, to get the real positions for the sliders, as feedback from arduino
+      except msg:
+        sys.stderr.write('ERROR: %s\n' % msg)
+        break
+    self.alive = False
 
   def sendValues(self,event):
-    status = "Sending ( " 
+    status = "( " 
     for i in range(NMB_OF_SLIDERS):
       val = self.sliders[i].get()
       status += str (val)
       if (i != NMB_OF_SLIDERS - 1):
         status += ", "
     status += " )"
-    self.STATUS.config(text=status)
+    self.serial.write(data(status))
+    self.STATUS.config(text="Sent: " + status)
+    time.sleep(0.1)
+    print ("received:" + str(self.serial.read(50)))
 
   def addSlider(self):
     slider = Scale(from_=0, to=100, resolution=1)
     slider.pack(side = "left", expand=1, fill="both")
     slider.bind("<ButtonRelease-1>", self.sendValues)
     self.sliders.append(slider)
+
+  def stop(self):
+    if self.alive:
+      self.alive = False
+      self.thread_read.join()
+      print ("thread ended")
+      self.quit();
 
   def createWidgets(self):
     self.STATUS = Label()
@@ -35,7 +81,7 @@ class App(Frame):
 
     self.QUIT = Button()
     self.QUIT["text"] = "Quit"
-    self.QUIT["command"] = self.quit
+    self.QUIT["command"] = self.stop
     self.QUIT.pack(side = "right", fill="y", anchor="e")
 
 root = Tk()
