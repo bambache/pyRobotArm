@@ -3,8 +3,10 @@ import time
 import threading
 import sys
 
-NMB_OF_SLIDERS = 6
-PORT = "loop://logging=debug"
+NMB_OF_SLIDERS = 5
+#PORT = "loop://logging=debug"
+PORT = "/dev/ttyACM0"
+TIMEOUT = 1
 
 if sys.version_info >= (3, 0):
     from tkinter import *
@@ -21,7 +23,7 @@ class App(Frame):
     master.protocol("WM_DELETE_WINDOW", self.stop)
     self.pack()
     self.createWidgets()
-    self.serial = serial.serial_for_url(PORT, timeout=0.1)
+    self.serial = serial.serial_for_url(PORT, timeout=TIMEOUT)
     self.alive = True
     self.thread_read = threading.Thread(target=self.reader)
     self.thread_read.setDaemon(True)
@@ -32,12 +34,11 @@ class App(Frame):
     """loop forever """
     while self.alive:
       try:
-        data = self.serial.read(1)              # read one, blocking
-        n = self.serial.inWaiting()             # look if there is more
-        if n:
-          data = data + self.serial.read(n)   # and get as much as possible
+        data = self.serial.readline() # read one line, blocking
         if data:
-	  #here some parsing is to be done, to get the real positions for the sliders, as feedback from arduino
+          print ('received: <' + data + '>')
+      	  # here some parsing is done, to get the real 
+          # positions for the sliders, as feedback from arduino
           values = data.decode().split(',')
           assert (len(values) == NMB_OF_SLIDERS)
           for i in range(NMB_OF_SLIDERS):
@@ -54,11 +55,12 @@ class App(Frame):
       status += str (val)
       if (i != NMB_OF_SLIDERS - 1):
         status += ", "
-    self.serial.write(data(status))
+    self.serial.write(data(status + '\n'))
     self.STATUS.config(text="Sent: <" + status + ">")
 
   def addSlider(self):
-    slider = Scale(from_=0, to=100, resolution=1)
+    slider = Scale(from_=0, to=180, resolution=1)
+    slider.set(90)
     slider.pack(side = "left", expand=1, fill="both")
     slider.bind("<ButtonRelease-1>", self.sendValues)
     self.sliders.append(slider)
