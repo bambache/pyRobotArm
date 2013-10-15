@@ -1,29 +1,36 @@
-// var ws = new WebSocket("wss://pyrobotarm-c9-bambache.c9.io/echosocket?encoding=text");
-
-// ws.onopen = function() {
-//     ws.send("Hello, world");
-// };
-
-// ws.onerror = function() {
-//     alert("Error");
-// };
-
-// ws.onmessage = function (evt) {
-//     alert(evt.data);
-// };
-
 $(document).ready(function() {
     if (!window.console) window.console = {};
     if (!window.console.log) window.console.log = function() {};
-
-    $("#slider").change( function() {
-        updater.socket.send($(this).val());
-        return false;
-    });
     
-    $("#slider").select();
+    // setup graphic EQ
+    $( "#eq > span" ).each(function(index) {
+      // read initial values from markup and replace that
+      var value = parseInt( $( this ).text(), 10 );
+      $( this ).empty().slider({
+        value: slider_values[index],
+        range: "min",
+        animate: true,
+        orientation: "vertical",
+        min: 0,
+        max: 180,
+        change: function( event, ui ) {
+          $( "#status" ).append( ui.value + " from: " + index + "<br>");
+          slider_values[index] = ui.value;
+          sendSliderValues();
+        }
+      });
+    });
+
     updater.start();
 });
+
+function sendSliderValues() {
+    var allValues = "";
+    $.each(slider_values, function(i,val) {
+        allValues += val + ",";
+    });
+    updater.socket.send(allValues);
+}
 
 function newMessage(form) {
     var message = form.formToDict();
@@ -41,6 +48,7 @@ jQuery.fn.formToDict = function() {
     return json;
 };
 
+var slider_values = [90, 90, 90 ,90, 90];
 var updater = {
     socket: null,
 
