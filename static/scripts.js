@@ -25,10 +25,10 @@ $(document).ready(function() {
 });
 
 function sendSliderValues() {
-    var allValues = "";
-    $.each(slider_values, function(i,val) {
-        allValues += val + ",";
-    });
+    var allValues = slider_values.join();
+    // $.each(slider_values, function(i,val) {
+    //     allValues += val + ",";
+    // });
     updater.socket.send(allValues);
 }
 
