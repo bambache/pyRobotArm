@@ -48,12 +48,7 @@ class SlidersSocket(tornado.websocket.WebSocketHandler):
             try:
                 data = self.serial.readline() # read one line, blocking
                 if data:
-                    self.write_message(u'received: <' + data + '>')
-                    # here some parsing is done, to get the real positions for the sliders, as feedback from arduino
-                    #values = data.decode().split(',')
-                    #assert (len(values) == NMB_OF_SLIDERS)
-                    #for i in range(NMB_OF_SLIDERS):
-                    #  self.sliders[i].set(int(values[i]))
+                    self.write_message( data )
             except:
                 sys.stderr.write('ERROR: %s\n' % sys.exc_info()[0] )
                 raise
@@ -63,7 +58,7 @@ class SlidersSocket(tornado.websocket.WebSocketHandler):
         print "WebSocket opened"
 
     def on_message(self, message):
-        self.write_message(u"Sending to Serial port: <" + message +">")
+        #self.write_message(u"Sending to Serial port: <" + message +">")
         self.serial.write(message+'\n')
 
     def on_close(self):

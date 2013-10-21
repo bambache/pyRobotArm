@@ -13,20 +13,16 @@
     
     
     <body>
-    
+    <div class="container">
         <div id="input">
-            <div id="eq">
             {% for id in range(5) %}
-                <span id="{{ id }}">90</span>
+                <div id="slider{{ id }}"></div>
             {% end %}
-            </div>
-            <!--<div id="slider-vertical" style="height: 200px; position=relative"></div>-->
-            <!--<input name="slider" type="range" id="slider{{ id }}" value="90" min="0" max="180" style="width:500px"/>-->
         </div>
         
         <div id="status">
         </div>
-        
+    </div>    
     </body>
 
 </html>

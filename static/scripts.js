@@ -1,77 +1,74 @@
 $(document).ready(function() {
     if (!window.console) window.console = {};
     if (!window.console.log) window.console.log = function() {};
+
+    var slider_values = [90, 90, 90 ,90, 90];
+    var max_status_lines = 10;
+    var change_handler_enabled =true;
     
-    // setup graphic EQ
-    $( "#eq > span" ).each(function(index) {
-      // read initial values from markup and replace that
-      var value = parseInt( $( this ).text(), 10 );
-      $( this ).empty().slider({
-        value: slider_values[index],
-        range: "min",
-        animate: true,
-        orientation: "vertical",
-        min: 0,
-        max: 180,
-        change: function( event, ui ) {
-          $( "#status" ).append( ui.value + " from: " + index + "<br>");
-          slider_values[index] = ui.value;
-          sendSliderValues();
+    var updater = {
+        socket: null,
+        
+        start: function() {
+            var url = "wss://" + location.host + "/sliderssocket";
+            updater.socket = new WebSocket(url);
+            updater.socket.onmessage = function(event) {
+                logToStatus("RECV: |"+event.data + "|");
+                var test_data = "123,21,123,21,123 ";
+                var event_values = test_data.split(",");
+                logToStatus("PARSED: |" + event_values.join() + "|");
+                $.each(event_values, function(i, val) {
+                    slider_values[i] = parseInt(val,10);
+                })
+                change_handler_enabled = false;
+                setSliderValues();
+                change_handler_enabled = true;
+            }
+            updater.socket.onerror = function() {
+                logToStatus("socket error");
+            }
+            updater.socket.onopen = function() {
+                logToStatus("socket opened");
+            }
+        },
+    
+    };
+    
+    function logToStatus(message){
+        if ($("#status").contents().length > max_status_lines ) {
+            $("#status :first-child").remove();
         }
-      });
-    });
+        $("#status").append("<p>"+message+"</p>");
+    }
+    
+    function sendSliderValues() {
+        var allValues = slider_values.join();
+        logToStatus("SEND: |" + allValues + "|");
+        updater.socket.send(allValues);
+    }
+    
+    function setSliderValues() {
+        $.each(slider_values, function(i, val) {
+            $("#slider" + i).empty().slider({
+                value: val,
+                range: "min",
+                animate: true,
+                orientation: "vertical",
+                min: 0,
+                max: 180,
+                change: function(event, ui) {
+                    if (!change_handler_enabled) return;
+                    logToStatus(ui.value + " from: " + i);
+                    slider_values[i] = ui.value;
+                    sendSliderValues();
+                }
+            });
+        });
+    }
+    
+    setSliderValues();
 
     updater.start();
 });
 
-function sendSliderValues() {
-    var allValues = slider_values.join();
-    // $.each(slider_values, function(i,val) {
-    //     allValues += val + ",";
-    // });
-    updater.socket.send(allValues);
-}
 
-function newMessage(form) {
-    var message = form.formToDict();
-    updater.socket.send(JSON.stringify(message));
-    form.find("input[type=text]").val("").select();
-}
-
-jQuery.fn.formToDict = function() {
-    var fields = this.serializeArray();
-    var json = {}
-    for (var i = 0; i < fields.length; i++) {
-        json[fields[i].name] = fields[i].value;
-    }
-    if (json.next) delete json.next;
-    return json;
-};
-
-var slider_values = [90, 90, 90 ,90, 90];
-var updater = {
-    socket: null,
-
-    start: function() {
-        var url = "wss://" + location.host + "/sliderssocket";
-        updater.socket = new WebSocket(url);
-        updater.socket.onmessage = function(event) {
-            $("#status").append(event.data + "<br>");
-        }
-        updater.socket.onerror = function() {
-            $("#status").append("socket error<br>");
-        }
-        updater.socket.onopen = function() {
-            $("#status").append("socket opened<br>");
-        }
-    },
-
-    showMessage: function(message) {
-        var existing = $("#m" + message.id);
-        if (existing.length > 0) return;
-        var node = $(message.html);
-        node.hide();
-        $("#inbox").append(node);
-        node.slideDown();
-    }
-};
