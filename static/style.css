@@ -3,6 +3,7 @@ body {
     width:800px;
     margin: 0;
     background:#A2A6FD;
+    border:1px;
 }
 .container {
     position:relative;
@@ -13,21 +14,25 @@ body {
     height:100%;
     position:absolute;
     left:0px;
-    margin-left:30px;
+    margin-left:40px;
 }
 #input div {
     height:90%;
-    width:15px;
-    margin-right:30px;
+    width:30px;
+    margin-right:60px;
     margin-top:12px;
     float:left;
 }
 #status {
     height:90%;
     margin-top:12px;
-    width:100%;
+    width:300px;
     position:absolute;
     right:5px;
     background:#FF6262;
-    left:300px;
+    left:500px;
+}
+
+p {
+    margin:1px;
 }

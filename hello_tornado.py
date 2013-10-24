@@ -7,11 +7,13 @@ import serial
 import time
 import threading
 
-host=os.environ['IP']
-port=os.environ['PORT']
+#host=os.environ['IP']
+#port=os.environ['PORT']
+host="*"
+port="8080"
 
-PORT = "loop://logging=debug"
-#PORT = "/dev/ttyACM0"
+#PORT = "loop://logging=debug"
+PORT = "/dev/ttyACM0"
 TIMEOUT = 1
 
 class Application(tornado.web.Application):

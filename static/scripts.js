@@ -3,20 +3,18 @@ $(document).ready(function() {
     if (!window.console.log) window.console.log = function() {};
 
     var slider_values = [90, 90, 90 ,90, 90];
-    var max_status_lines = 10;
+    var max_status_lines = 16;
     var change_handler_enabled =true;
     
     var updater = {
         socket: null,
         
         start: function() {
-            var url = "wss://" + location.host + "/sliderssocket";
+            var url = "ws://" + location.host + "/sliderssocket";
             updater.socket = new WebSocket(url);
             updater.socket.onmessage = function(event) {
                 logToStatus("RECV: |"+event.data + "|");
-                var test_data = "123,21,123,21,123 ";
-                var event_values = test_data.split(",");
-                logToStatus("PARSED: |" + event_values.join() + "|");
+                var event_values = event.data.split(",");
                 $.each(event_values, function(i, val) {
                     slider_values[i] = parseInt(val,10);
                 })
